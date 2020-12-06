@@ -46,27 +46,22 @@ fn valid_eye_color(eye_color: &str) -> bool {
 }
 
 fn valid_hair_color(hair_color: &str) -> bool {
-    if hair_color.starts_with("#") {
-        hair_color[1..]
-            .chars()
-            .filter(char::is_ascii_hexdigit)
-            .count()
-            == 6
-    } else {
-        false
-    }
+    hair_color
+        .strip_prefix('#')
+        .map(|hc| hc.chars().filter(char::is_ascii_hexdigit).count() == 6)
+        .unwrap_or(false)
 }
 
 fn valid_height(height: &str) -> bool {
     match height {
         x if x.ends_with("cm") => x[..x.len() - 2]
             .parse::<u8>()
-            .map(|height| height >= 150 && height <= 193)
+            .map(|height| (150..=193).contains(&height))
             .unwrap_or(false),
 
         x if x.ends_with("in") => x[..x.len() - 2]
             .parse::<u8>()
-            .map(|height| height >= 59 && height <= 76)
+            .map(|height| (59..=76).contains(&height))
             .unwrap_or(false),
         _ => false,
     }
@@ -75,21 +70,21 @@ fn valid_height(height: &str) -> bool {
 fn valid_issue_year(issue_year: &str) -> bool {
     issue_year
         .parse::<u16>()
-        .map(|issue_year| issue_year >= 2010 && issue_year <= 2020)
+        .map(|issue_year| (2010..=2020).contains(&issue_year))
         .unwrap_or(false)
 }
 
 fn valid_expiration_year(expiration_year: &str) -> bool {
     expiration_year
         .parse::<u16>()
-        .map(|birth_year| birth_year >= 2020 && birth_year <= 2030)
+        .map(|expiration_year| (2020..=2030).contains(&expiration_year))
         .unwrap_or(false)
 }
 
 fn valid_birth_year(birth_year: &str) -> bool {
     birth_year
         .parse::<u16>()
-        .map(|birth_year| birth_year >= 1920 && birth_year <= 2002)
+        .map(|birth_year| (1920..=2002).contains(&birth_year))
         .unwrap_or(false)
 }
 
@@ -106,8 +101,8 @@ fn main() {
 
                     data.clear()
                 } else {
-                    for l in line.split(" ") {
-                        match l.split(":").collect::<Vec<&str>>().as_slice() {
+                    for l in line.split(' ') {
+                        match l.split(':').collect::<Vec<&str>>().as_slice() {
                             [key, value] => data.insert(key.to_string(), value.to_string()),
                             _ => unreachable!(),
                         };

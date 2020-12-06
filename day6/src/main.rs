@@ -27,16 +27,14 @@ fn main() {
                     group += 1;
                     first_person = true;
                     answers.push(HashSet::new());
+                } else if first_person {
+                    answers[group].extend(line.chars());
+                    first_person = false;
                 } else {
-                    if first_person {
-                        answers[group].extend(line.chars());
-                        first_person = false;
-                    } else {
-                        answers[group] = line
-                            .chars()
-                            .filter(|c| answers[group].contains(c))
-                            .collect();
-                    }
+                    answers[group] = line
+                        .chars()
+                        .filter(|c| answers[group].contains(c))
+                        .collect();
                 }
 
                 (answers, group, first_person)

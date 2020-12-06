@@ -8,7 +8,7 @@ fn main() {
                 acc <<= 1;
 
                 if next == 'B' || next == 'R' {
-                    acc +=  1;
+                    acc += 1;
                 }
 
                 acc
@@ -20,8 +20,7 @@ fn main() {
 
     let missing_seat: i32 = (0..1024) // all possible seats
         .filter(|seat| !seat_ids.contains(seat))
-        .filter(|seat_id| seat_ids.contains(&(seat_id + 1)) && seat_ids.contains(&(seat_id - 1)))
-        .next()
+        .find(|seat_id| seat_ids.contains(&(seat_id + 1)) && seat_ids.contains(&(seat_id - 1)))
         .unwrap();
 
     println!("{}", seat_ids.iter().max().unwrap());
