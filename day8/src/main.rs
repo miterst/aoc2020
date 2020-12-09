@@ -1,93 +1,119 @@
+use crate::Instruction::{Acc, Jmp, Nop};
 use std::collections::HashSet;
+use std::str::FromStr;
+use std::string::ParseError;
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Instruction {
+    Acc(i32),
+    Jmp(i32),
+    Nop(i32),
+}
+
+impl Instruction {
+    fn to_nop(&self) -> Self {
+        match self {
+            Jmp(arg) => Nop(*arg),
+            Acc(_) => panic!("Not possible"),
+            Nop(_) => panic!("Already NOP"),
+        }
+    }
+}
+
+impl FromStr for Instruction {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let string: Vec<&str> = s.split(' ').collect();
+
+        let instruction = match string.as_slice() {
+            ["acc", arg] => Acc(arg.parse().unwrap()),
+            ["nop", arg] => Nop(arg.parse().unwrap()),
+            ["jmp", arg] => Jmp(arg.parse().unwrap()),
+            _ => unreachable!(),
+        };
+
+        Ok(instruction)
+    }
+}
 
 fn main() {
-    let instructions: Vec<(&str, i32)> = include_str!("input")
+    let instructions: Vec<Instruction> = include_str!("input")
         .lines()
-        .map(|x| {
-            let v: Vec<&str> = x.split(' ').collect();
-            (v[0], v[1].parse().unwrap())
-        })
-        .collect();
+        .map(FromStr::from_str)
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
 
     println!("{}", part1(&instructions));
     println!("{}", part2(instructions));
 }
 
-fn part1(instructions: &[(&str, i32)]) -> i32 {
+fn part1(instructions: &[Instruction]) -> i32 {
     run_code(instructions).0
 }
 
-fn part2(mut instructions: Vec<(&str, i32)>) -> i32 {
+fn part2(mut instructions: Vec<Instruction>) -> i32 {
     let mut prev_change = None;
 
-    let mut jmps_and_nops: Vec<(usize, i32)> = instructions
+    // in order to have a loop you need a backward jump
+    let mut backward_jumps: Vec<(usize, Instruction)> = instructions
         .to_vec()
         .into_iter()
         .enumerate()
-        .filter(|(_, (op, _))| *op == "jmp" || *op == "nop")
-        .map(|(ic, (_op, arg))| (ic, arg))
+        .filter(|(_, instruction)| matches!(instruction, Jmp(arg) if arg < &0))
         .collect();
 
-    // try the one with the longest arg first
-    jmps_and_nops.sort_by(|(_, a), (_, b)| b.cmp(a));
+    // start with the longest jmp
+    backward_jumps.sort();
 
     loop {
-        let (accumulator, ic) = run_code(&instructions);
+        let (accumulator, pc) = run_code(&instructions);
 
-        if ic == instructions.len() {
+        if pc == instructions.len() {
             break accumulator;
         }
 
         // restore previous change
-        if let Some((op, arg, saved_ic)) = prev_change {
-            instructions[saved_ic] = (op, arg);
+        if let Some((instruction, saved_pc)) = prev_change {
+            instructions[saved_pc] = instruction;
         }
 
         // apply next jmp or nop
-        if let Some((ic, _)) = jmps_and_nops.pop() {
+        if let Some((jmp_location, _)) = backward_jumps.pop() {
             // save counter
-            let (op, arg) = instructions[ic];
-            prev_change = Some((op, arg, ic));
-
-            // change instruction
-            if op == "nop" {
-                instructions[ic].0 = "jmp";
-            } else {
-                instructions[ic].0 = "nop";
-            }
+            prev_change = Some((instructions[jmp_location], jmp_location));
+            instructions[jmp_location] = instructions[jmp_location].to_nop();
         }
     }
 }
 
-fn run_code(instructions: &[(&str, i32)]) -> (i32, usize) {
+fn run_code(instructions: &[Instruction]) -> (i32, usize) {
     let mut accumulator = 0;
-    let mut instruction_counter: i32 = 0;
-    let mut executed = HashSet::new();
+    let mut pc: i32 = 0;
+    let mut pc_cache = HashSet::new();
 
     loop {
         // terminated
-        if instruction_counter as usize == instructions.len() {
+        if pc as usize == instructions.len() {
             break;
         }
-
-        let (op, arg) = instructions[instruction_counter as usize];
 
         // found a loop
-        if executed.contains(&instruction_counter) {
+        if pc_cache.contains(&pc) {
             break;
         }
 
-        executed.insert(instruction_counter);
+        pc_cache.insert(pc);
 
-        match (op, arg) {
-            ("acc", arg) => {
+        match instructions[pc as usize] {
+            Acc(arg) => {
                 accumulator += arg;
-                instruction_counter += 1;
+                pc += 1;
             }
-            ("jmp", arg) => instruction_counter += arg,
-            _ => instruction_counter += 1, // nop
+            Jmp(arg) => pc += arg,
+            Nop(_) => pc += 1,
         }
     }
 
-    (accumulator, instruction_counter as usize)
+    (accumulator, pc as usize)
 }
