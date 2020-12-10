@@ -1,5 +1,5 @@
 fn main() {
-    let xmas_numbers: Vec<u128> =
+    let xmas_numbers: Vec<i128> =
         include_str!("input")
             .lines()
             .map(str::parse)
@@ -12,7 +12,7 @@ fn main() {
 
 }
 
-fn find_fringe_number(xmas_numbers: &[u128], preamble_length: usize) -> u128 {
+fn find_fringe_number(xmas_numbers: &[i128], preamble_length: usize) -> i128 {
     *xmas_numbers.iter()
         .enumerate()
         .skip(preamble_length)
@@ -23,7 +23,7 @@ fn find_fringe_number(xmas_numbers: &[u128], preamble_length: usize) -> u128 {
         .1
 }
 
-fn contained_in_any_2sum(nums: &[u128], n: u128) -> bool {
+fn contained_in_any_2sum(nums: &[i128], n: i128) -> bool {
     for i in 0..nums.len() - 1 {
         for j in i+1..nums.len() {
             if nums[i] + nums[j] == n && nums[i] != nums [j] {
@@ -35,15 +35,23 @@ fn contained_in_any_2sum(nums: &[u128], n: u128) -> bool {
     false
 }
 
-fn find_encryption_weakness(data: &[u128], fringe: u128) -> u128 {
-    let range = (5..data.len()/2)
-        .find_map(|window_size| contained_in_window(data, window_size, fringe))
-        .unwrap();
+fn find_encryption_weakness(data: &[i128], fringe: i128) -> i128 {
+    let mut i = 0;
+    let mut j = 0;
+    let mut s: i128 = 0;
 
-    range.iter().min().unwrap() + range.iter().max().unwrap()
-}
+    // there must be one
+    while s != fringe {
+        while s < fringe && j < data.len() - 1 {
+            j += 1;
+            s += data[j];
+        }
 
-fn contained_in_window(nums: &[u128], window_size: usize, n: u128) -> Option<&[u128]> {
-    nums.windows(window_size)
-        .find(|window| window.iter().sum::<u128>() == n)
+        while s > fringe && i < j {
+            i += 1;
+            s -= data[i];
+        }
+    }
+
+    data[i..j].iter().min().unwrap() + data[i..j].iter().max().unwrap()
 }
