@@ -1,23 +1,25 @@
 fn main() {
-    let xmas_numbers: Vec<i128> =
-        include_str!("input")
-            .lines()
-            .map(str::parse)
-            .collect::<Result<_, _>>()
-            .unwrap();
+    let xmas_numbers: Vec<i128> = include_str!("input")
+        .lines()
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .unwrap();
 
     let fringe = find_fringe_number(&xmas_numbers, 25);
     println!("Part 1 sol: {}", fringe);
-    println!("Part 2 sol: {}", find_encryption_weakness(&xmas_numbers, fringe));
-
+    println!(
+        "Part 2 sol: {}",
+        find_encryption_weakness(&xmas_numbers, fringe)
+    );
 }
 
 fn find_fringe_number(xmas_numbers: &[i128], preamble_length: usize) -> i128 {
-    *xmas_numbers.iter()
+    *xmas_numbers
+        .iter()
         .enumerate()
         .skip(preamble_length)
         .find(|(index, num)| {
-            !contained_in_any_2sum(&xmas_numbers[index-preamble_length..*index], **num)
+            !contained_in_any_2sum(&xmas_numbers[index - preamble_length..*index], **num)
         })
         .unwrap()
         .1
@@ -25,8 +27,8 @@ fn find_fringe_number(xmas_numbers: &[i128], preamble_length: usize) -> i128 {
 
 fn contained_in_any_2sum(nums: &[i128], n: i128) -> bool {
     for i in 0..nums.len() - 1 {
-        for j in i+1..nums.len() {
-            if nums[i] + nums[j] == n && nums[i] != nums [j] {
+        for j in i + 1..nums.len() {
+            if nums[i] + nums[j] == n && nums[i] != nums[j] {
                 return true;
             }
         }
