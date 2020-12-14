@@ -38,12 +38,11 @@ fn part2() -> i128 {
         .filter(|(_, x)| *x != "x")
         .map(|(i, x)| {
             let divisor: i128 = x.parse().unwrap();
-            let reminder = modulus(-(i as i128),  divisor);
+            let reminder = modulus(-(i as i128), divisor);
 
             (reminder, divisor)
         })
         .collect();
-
 
     println!("{:?}", constraints);
     let (reminders, mods): (Vec<i128>, Vec<i128>) = constraints.into_iter().unzip();
@@ -51,8 +50,7 @@ fn part2() -> i128 {
 }
 
 // copy/paste fixes ring_algorithm::chinese_remainder_theorem negative reminder
-pub fn chinese_remainder_theorem(reminders: &[i128], mods: &[i128]) -> Option<i128>
-{
+pub fn chinese_remainder_theorem(reminders: &[i128], mods: &[i128]) -> Option<i128> {
     if reminders.len() != mods.len() {
         return None;
     }
